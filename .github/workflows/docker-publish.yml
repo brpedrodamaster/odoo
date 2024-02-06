@@ -1,0 +1,30 @@
+FROM brpedroda/odoo-docker:master
+
+USER root
+
+RUN pip3 install freezegun==0.3.15
+
+RUN mkdir /odoo/extra-addons
+
+ARG ODOO_HASH=14.0
+ENV ODOO_HASH="${ODOO_HASH}"
+ENV PATH="/odoo:${PATH}"
+
+ADD . / /odoo/extra-addons/
+
+ADD odoo.conf /etc/odoo/odoo.conf
+
+RUN cd /odoo \
+    && curl https://codeload.github.com/odoo/odoo/zip/${ODOO_HASH} >> odoo.zip \
+    && unzip odoo.zip \
+    && mv odoo-${ODOO_HASH}/* . \
+    && rm odoo.zip \
+    && rm -rf /odoo/.git* /odoo/setup* /odoo/doc* /odoo/debian \
+    && find . -not -name 'pt_BR.po' -not -name 'pt.po' -name '*.po' -delete 
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+CMD ["odoo-bin","-c","/etc/odoo/odoo.conf"]
+
+
+
